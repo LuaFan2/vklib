@@ -39,7 +39,7 @@ function vk:Login(token)
         obj.token = token
     local result
     
-    function obj:Request(name, args, cb)
+    function obj:Request(name, args, cb, cbe)
         local argList = _newStack()
         
         local version = args.v and args.v or vk.Version
@@ -55,7 +55,7 @@ function vk:Login(token)
                 cb(result)
             end,
             function(error) 
-                print("HTTP Error | " .. error)
+                local cbe = cbe and cbe(error) or print("HTTP Error | " .. error)
         end)
     end
     
