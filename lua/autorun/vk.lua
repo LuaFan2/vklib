@@ -37,7 +37,22 @@ end
 function vk:Login(token)
     local obj = {}
         obj.token = token
+        obj.options = {}
     local result
+    
+    function obj:SetOption(k, v)
+        if not type(k) == "string" and not type(v) == "string" or not type(v) == "boolean" then return false end
+        
+        self.options[k] = v
+        return true
+    end
+    
+    function obj:SetOptions(t)
+        if type(t) ~= "table" then return false end
+        
+        self.options = t
+        return true
+    end
     
     function obj:Request(name, args, cb, cbe)
         local argList = _newStack()
@@ -50,7 +65,7 @@ function vk:Login(token)
         
         http.Fetch('https://api.vk.com/method/' .. name .. '?' .. _toString(argList) .. 'v=' .. version .. '&access_token=' .. self.token, 
             function(body)
-                result = util.JSONToTable(body)
+                result = self.options.raw and body or util.JSONToTable(body)
                 
                 cb(result)
             end,
