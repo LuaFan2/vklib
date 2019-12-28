@@ -46,19 +46,21 @@ function vk:Session(token, options)
           
             return setmetatable({}, {__call = function(s, f)
               return {cb = function(this, callb)
+                callb = callb or function(...) end
                 if not f.v then f.v = vk.Version end
 
                 for k, v in pairs(f) do
                   _addString(argList, k .. '=' .. v .. '&')
                 end
-
-                http.Fetch('https://api.vk.com/method/' .. group .. '.' .. method .. '?' .. _toString(argList) .. 'access_token=' .. obj.token, 
+                
+                local req = string.gsub('https://api.vk.com/method/' .. group .. '.' .. method .. '?' .. _toString(argList) .. 'access_token=' .. obj.token, "%s+", "%%20")
+                http.Fetch(req, 
                     function(body)
                         result = obj.options.raw and body or util.JSONToTable(body)
                         
                         callb(result)
                     end,
-                    function(error) 
+                    function(error)
                         callb(error)
                 end)
 
