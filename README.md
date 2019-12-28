@@ -11,12 +11,11 @@ Functional VK (vk.com) api wrapper for Garry's Mod
 ## Simple example
 ```lua
 
-local api = vk:Login(token)
+local api = vk:Session(token)
 
-api:Request("groups.isMember", {["group_id"] = 1, ["user_id"] = 1}, function(res)
+api.groups.isMember{group_id = 1, user_id = 1}:cb(function(res)
     print(res.response)
 end)
-
 ```
 ```
 Output:
@@ -24,12 +23,9 @@ Output:
 ```
 ## Example with options
 ```lua
+local api = vk:Session(token, {raw = true})
 
-local api = vk:Login(token)
-
-api:SetOption("raw", true) -- or api:SetOptions({["raw"] = true})
-
-api:Request("groups.isMember", {["group_id"] = 1, ["user_id"] = 1}, function(res)
+api.groups.isMember{group_id = 1, user_id = 1}:cb(function(res)
     print(res)
 end)
 ```
@@ -37,3 +33,7 @@ end)
 Output:
 {"response":0}
 ```
+
+## TODO
+
+- Creating a session using login and password

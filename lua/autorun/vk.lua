@@ -7,9 +7,6 @@ vk = {}
 vk.Version = '5.103'
 
 --
---
-
---
 -- Help functions
 --
 
@@ -34,48 +31,47 @@ end
 --
 --
 
-function vk:Login(token)
+function vk:Session(token, options)
     local obj = {}
         obj.token = token
-        obj.options = {}
-    local result
+        obj.options = options or {}
     
-    function obj:SetOption(k, v)
-        if not type(k) == "string" and not type(v) == "string" or not type(v) == "boolean" then return false end
-        
-        self.options[k] = v
-        return true
-    end
-    
-    function obj:SetOptions(t)
-        if type(t) ~= "table" then return false end
-        
-        self.options = t
-        return true
-    end
-    
-    function obj:Request(name, args, cb, cbe)
+    local api = setmetatable({}, {__index = function(t, kg)
+        local group, method, result
         local argList = _newStack()
         
-        local version = args.v and args.v or vk.Version
+        group = kg
+        kg = setmetatable({}, {__index = function(_, km)
+            method = km
+          
+            return setmetatable({}, {__call = function(s, f)
+              return {cb = function(this, callb)
+                if not f.v then f.v = vk.Version end
+
+                for k, v in pairs(f) do
+                  _addString(argList, k .. '=' .. v .. '&')
+                end
+
+                http.Fetch('https://api.vk.com/method/' .. group .. '.' .. method .. '?' .. _toString(argList) .. 'access_token=' .. obj.token, 
+                    function(body)
+                        result = obj.options.raw and body or util.JSONToTable(body)
+                        
+                        callb(result)
+                    end,
+                    function(error) 
+                        callb(error)
+                end)
+
+                return true
+              end}
+            end})
+        end})
         
-        for k, v in pairs(args) do
-            _addString(argList, k .. '=' .. v .. '&')
-        end
-        
-        http.Fetch('https://api.vk.com/method/' .. name .. '?' .. _toString(argList) .. 'v=' .. version .. '&access_token=' .. self.token, 
-            function(body)
-                result = self.options.raw and body or util.JSONToTable(body)
-                
-                cb(result)
-            end,
-            function(error) 
-                local cbe = cbe and cbe(error) or print("HTTP Error | " .. error)
-        end)
-    end
-    
+        return kg
+    end})
+
     setmetatable(obj, self)
     self.__index = self
     
-    return obj
+    return api
 end
